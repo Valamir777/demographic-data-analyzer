@@ -1,28 +1,59 @@
 import pandas as pd
 
-df = pd.read_csv('adult.data.csv')
 
-
-def race_count():
+def raceCount(df):
+    """
+    :param df: Takes a data frame of population demographics, finds each instance of a unique race occurring,
+    counts each occurrence of those races and zips the unique races to their total count in a dictionary.
+    :return: a Dictionary of unique races and the total amount of each race represented in the Data.
+    """
     raceList = df['race'].unique()
-    raceCount = []
+    race_Count = []
     for Race in raceList:
-        raceCount.append(list(df['race']).count(str(Race)))
-    return dict(zip(raceList, raceCount))
+        race_Count.append(list(df['race']).count(str(Race)))
+    return dict(zip(raceList, race_Count))
+
+
+def filter_rows_by_values(df, col, values):
+    """
+    :param df: Data Frame of Population Demographics
+    :param col: Column to be filtered
+    :param values: Value to be filtered out of the Column
+    :return: A filtered version of the Data Frame
+    """
+    return df[~df[col].isin(values)]
+
+
+def menAvg_age(df):
+    """
+    :param df: Data Frame of Population Demographics
+    :return: Returns the Average age of Males from the Data Set as a rounded whole integer
+    """
+    dfCopy = filter_rows_by_values(df, 'sex', ['Female'])
+    return int(dfCopy['age'].mean())
+
+
+def bachelorsEducation_percent(df):
+    total_population = df.shape[0]
+    # Create list of all education types and remove Bachelors from the list
+    list = df['education'].unique().tolist()
+    list.remove('Bachelors')
+    bachelors_population = filter_rows_by_values(df, 'education', list).shape[0]
+    return '{:,.2%}'.format(bachelors_population/total_population)
 
 
 def calculate_demographic_data(print_data=True):
     # Read data from file
-
+    df = pd.read_csv('adult.data.csv')
     # How many of each race are represented in this dataset? This should be a Pandas series with race names as the
     # index labels.
-    race_count = None
+    race_count = raceCount(df)
 
     # What is the average age of men?
-    average_age_men = None
+    average_age_men = menAvg_age(df)
 
     # What is the percentage of people who have a Bachelor's degree?
-    percentage_bachelors = None
+    percentage_bachelors = bachelorsEducation_percent(df)
 
     # What percentage of people with advanced education (`Bachelors`, `Masters`, or `Doctorate`) make more than 50K?
     # What percentage of people without advanced education make more than 50K?
