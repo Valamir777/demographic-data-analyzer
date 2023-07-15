@@ -1,11 +1,21 @@
 import pandas as pd
 
+df = pd.read_csv('adult.data.csv')
+
+
+def race_count():
+    raceList = df['race'].unique()
+    raceCount = []
+    for Race in raceList:
+        raceCount.append(list(df['race']).count(str(Race)))
+    return dict(zip(raceList, raceCount))
+
 
 def calculate_demographic_data(print_data=True):
     # Read data from file
-    df = None
 
-    # How many of each race are represented in this dataset? This should be a Pandas series with race names as the index labels.
+    # How many of each race are represented in this dataset? This should be a Pandas series with race names as the
+    # index labels.
     race_count = None
 
     # What is the average age of men?
@@ -43,7 +53,7 @@ def calculate_demographic_data(print_data=True):
     # DO NOT MODIFY BELOW THIS LINE
 
     if print_data:
-        print("Number of each race:\n", race_count) 
+        print("Number of each race:\n", race_count)
         print("Average age of men:", average_age_men)
         print(f"Percentage with Bachelors degrees: {percentage_bachelors}%")
         print(f"Percentage with higher education that earn >50K: {higher_education_rich}%")
@@ -64,6 +74,6 @@ def calculate_demographic_data(print_data=True):
         'rich_percentage': rich_percentage,
         'highest_earning_country': highest_earning_country,
         'highest_earning_country_percentage':
-        highest_earning_country_percentage,
+            highest_earning_country_percentage,
         'top_IN_occupation': top_IN_occupation
     }
