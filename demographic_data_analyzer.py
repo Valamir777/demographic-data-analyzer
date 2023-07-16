@@ -11,7 +11,8 @@ def raceCount(df):
     race_Count = []
     for Race in raceList:
         race_Count.append(list(df['race']).count(str(Race)))
-    return dict(zip(raceList, race_Count))
+    raceList_count = pd.Series(data=race_Count, index=raceList)
+    return raceList_count
 
 
 def filter_rows_by_values(df, col, values):
@@ -24,13 +25,14 @@ def filter_rows_by_values(df, col, values):
     return df[~df[col].isin(values)]
 
 
-def menAvg_age(df):
+def menAvg_age(df, Gender):
     """
+    :param Gender:
     :param df: Data Frame of Population Demographics
     :return: Returns the Average age of Males from the Data Set as a rounded whole integer
     """
-    dfCopy = filter_rows_by_values(df, 'sex', ['Female'])
-    return int(dfCopy['age'].mean())
+    dfCopy = filter_rows_by_values(df, 'sex', Gender)
+    return round(dfCopy['age'].mean(), 1)
 
 
 def Education_percent(df, education_level):
@@ -41,38 +43,60 @@ def Education_percent(df, education_level):
     :return: filtered percentage of those having the education level.
     """
     total_population = df.shape[0]
-    # Create list of all education types and remove Bachelors from the list
-    lst = df['education'].unique().tolist()
-    lst = list(set(lst) - set(education_level))
-    bachelors_population = filter_rows_by_values(df, 'education', lst).shape[0]
-    return '{:,.2%}'.format(bachelors_population / total_population)
+    lst = list(set(df['education'].unique().tolist()) - set(education_level))
+    educated_population = filter_rows_by_values(df, 'education', lst).shape[0]
+    return float("{:10.1f}".format((educated_population / total_population) * 100))
+
+
+def income_class(df, education_level, income_level):
+    """
+    :param df: Demographic Data Frame
+    :param education_level: Education level of Demographics to be observed
+    :param income_level: Income level of Demographics to be observed
+    :return: Percentage of Educated Demographic earning greater than Input Level
+    """
+
+    educated_population = filter_rows_by_values(df, 'education',
+                                                list(set(df['education'].unique().tolist()) - set(education_level)))
+    income_population = filter_rows_by_values(educated_population, 'salary',
+                                              list(set(educated_population['salary'].unique().tolist())
+                                                   - set(income_level)))
+    return float("{:10.1f}".format((income_population.shape[0] / educated_population.shape[0] * 100)))
+
+
+def minWorking_hours(df):
+    return 0
 
 
 def calculate_demographic_data(print_data=True):
     # Read data from file
     df = pd.read_csv('adult.data.csv')
+    # Assign Two variable for educated population and uneducated.
+    educatedPopulation = ['Bachelors', 'Masters', 'Doctorate']
+    uneducatedPopulation = ['HS-grad', '11th', '9th', 'Some-college', 'Assoc-acdm',
+                            'Assoc-voc', '7th-8th', 'Prof-school', '5th-6th', '10th',
+                            '1st-4th', 'Preschool', '12th']
+
     # How many of each race are represented in this dataset? This should be a Pandas series with race names as the
     # index labels.
     race_count = raceCount(df)
 
     # What is the average age of men?
-    average_age_men = menAvg_age(df)
+    average_age_men = menAvg_age(df, ['Female'])
 
     # What is the percentage of people who have a Bachelor's degree?
     percentage_bachelors = Education_percent(df, ['Bachelors'])
 
     # with and without `Bachelors`, `Masters`, or `Doctorate`
-    higher_education = Education_percent(df, ['Bachelors', 'Masters', 'Doctorate'])
-    lower_education = Education_percent(df, ['HS-grad', '11th', '9th', 'Some-college', 'Assoc-acdm',
-                                             'Assoc-voc', '7th-8th', 'Prof-school', '5th-6th', '10th',
-                                             '1st-4th', 'Preschool', '12th'])
+    higher_education = Education_percent(df, educatedPopulation)
+    lower_education = Education_percent(df, uneducatedPopulation)
 
     # What percentage of people with advanced education (`Bachelors`, `Masters`, or `Doctorate`) make more than 50K?
     # What percentage of people without advanced education make more than 50K?
 
     # percentage with salary >50K
-    higher_education_rich = None
-    lower_education_rich = None
+    higher_education_rich = income_class(df, educatedPopulation, ['>50K'])
+    lower_education_rich = income_class(df, uneducatedPopulation, ['>50K'])
 
     # What is the minimum number of hours a person works per week (hours-per-week feature)?
     min_work_hours = None
