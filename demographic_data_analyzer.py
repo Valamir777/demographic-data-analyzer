@@ -33,13 +33,19 @@ def menAvg_age(df):
     return int(dfCopy['age'].mean())
 
 
-def bachelorsEducation_percent(df):
+def Education_percent(df, education_level):
+    """
+
+    :param df: Data frame of population Demographics.
+    :param education_level: Level of education to be filtered.
+    :return: filtered percentage of those having the education level.
+    """
     total_population = df.shape[0]
     # Create list of all education types and remove Bachelors from the list
-    list = df['education'].unique().tolist()
-    list.remove('Bachelors')
-    bachelors_population = filter_rows_by_values(df, 'education', list).shape[0]
-    return '{:,.2%}'.format(bachelors_population/total_population)
+    lst = df['education'].unique().tolist()
+    lst = list(set(lst) - set(education_level))
+    bachelors_population = filter_rows_by_values(df, 'education', lst).shape[0]
+    return '{:,.2%}'.format(bachelors_population / total_population)
 
 
 def calculate_demographic_data(print_data=True):
@@ -53,14 +59,16 @@ def calculate_demographic_data(print_data=True):
     average_age_men = menAvg_age(df)
 
     # What is the percentage of people who have a Bachelor's degree?
-    percentage_bachelors = bachelorsEducation_percent(df)
+    percentage_bachelors = Education_percent(df, ['Bachelors'])
+
+    # with and without `Bachelors`, `Masters`, or `Doctorate`
+    higher_education = Education_percent(df, ['Bachelors', 'Masters', 'Doctorate'])
+    lower_education = Education_percent(df, ['HS-grad', '11th', '9th', 'Some-college', 'Assoc-acdm',
+                                             'Assoc-voc', '7th-8th', 'Prof-school', '5th-6th', '10th',
+                                             '1st-4th', 'Preschool', '12th'])
 
     # What percentage of people with advanced education (`Bachelors`, `Masters`, or `Doctorate`) make more than 50K?
     # What percentage of people without advanced education make more than 50K?
-
-    # with and without `Bachelors`, `Masters`, or `Doctorate`
-    higher_education = None
-    lower_education = None
 
     # percentage with salary >50K
     higher_education_rich = None
