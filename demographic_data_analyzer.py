@@ -65,7 +65,63 @@ def income_class(df, education_level, income_level):
 
 
 def minWorking_hours(df):
-    return 0
+    hours_worked = df['hours-per-week'].tolist()
+    hours_worked.sort()
+    return hours_worked[0]
+
+
+def minWorking_hoursHigh_Salary(df):
+    salary = ['>50K']
+    minHours_worked = [minWorking_hours(df)]
+    minimumHour_workers = filter_rows_by_values(df, 'hours-per-week',
+                                                list(
+                                                    set(df['hours-per-week'].unique().tolist()) - set(minHours_worked)))
+
+    minWorkers_salaryTypes = minimumHour_workers['salary'].unique().tolist()
+    salaryFilter = list(set(minWorkers_salaryTypes) - set(salary))
+    minHour_workersHigh_Salary = filter_rows_by_values(minimumHour_workers, 'salary', salaryFilter)
+    return float("{:10.1f}".format((minHour_workersHigh_Salary.shape[0] / minimumHour_workers.shape[0] * 100)))
+
+
+def nationalsHigh_income(df, nation, nations):
+    lowIncome = df['salary'].unique().tolist()
+    lowIncome.remove('>50K')
+    nationsCopy = nations.copy()
+    nationsCopy.remove(nation)
+    nf = filter_rows_by_values(df, 'native-country', nationsCopy)
+    nf = filter_rows_by_values(nf, 'salary', lowIncome)
+    return nf
+
+
+def highest_earningCountry(df):
+    nation_earnings = dict()
+    # Create list of 42 Nations
+    nationList = df['native-country'].unique().tolist()
+    for nation in nationList:
+        nation_earnings[nation] = nationalsHigh_income(df, nation, nationList).shape[0]
+    return nation_earnings
+
+
+def highestEarning_countryPercentage(df, nation_earnings):
+    nationHighest_percentage = dict()
+    nationList = df['native-country'].unique().tolist()
+    for nation in nationList:
+        nationList_copy = nationList.copy()
+        nationList_copy.remove(str(nation))
+        nationPopulation = filter_rows_by_values(df, 'native-country', nationList_copy)
+        nationHighest_percentage[nation] = nation_earnings[nation] / (nationPopulation.shape[0]) * 100
+    return max(nationHighest_percentage, key=nationHighest_percentage.get), \
+           float("{:10.1f}".format(nationHighest_percentage[max(nationHighest_percentage,
+                                                                key=nationHighest_percentage.get)]))
+
+
+def popularOccupation(income_df):
+    occupations = income_df['occupation'].unique().tolist()
+    occupation_Count = []
+    for occupation in occupations:
+        occupation_Count.append(list(income_df['occupation']).count(str(occupation)))
+    occupations_count = pd.Series(data=occupation_Count, index=occupations)
+    return occupations_count.index[occupations_count.argmax()]
 
 
 def calculate_demographic_data(print_data=True):
@@ -99,19 +155,18 @@ def calculate_demographic_data(print_data=True):
     lower_education_rich = income_class(df, uneducatedPopulation, ['>50K'])
 
     # What is the minimum number of hours a person works per week (hours-per-week feature)?
-    min_work_hours = None
+    min_work_hours = minWorking_hours(df)
 
     # What percentage of the people who work the minimum number of hours per week have a salary of >50K?
-    num_min_workers = None
-
-    rich_percentage = None
+    rich_percentage = minWorking_hoursHigh_Salary(df)
 
     # What country has the highest percentage of people that earn >50K?
-    highest_earning_country = None
-    highest_earning_country_percentage = None
+    highest_earning_country = highestEarning_countryPercentage(df, highest_earningCountry(df))[0]
+    highest_earning_country_percentage = highestEarning_countryPercentage(df, highest_earningCountry(df))[1]
 
     # Identify the most popular occupation for those who earn >50K in India.
-    top_IN_occupation = None
+    top_IN_occupation = popularOccupation(nationalsHigh_income(df, 'India', df['native-country'].unique().tolist()))
+
 
     # DO NOT MODIFY BELOW THIS LINE
 
